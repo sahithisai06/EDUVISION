@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduVision — Scan</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="scan-shell">
+
+  <div class="scan-header">
+    <a href="{{ url_for('dashboard') }}" style="color:#fff; display:flex; align-items:center; gap:6px; font-size:13px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Back
+    </a>
+    <div class="title">Scan Answer Sheet</div>
+    <div style="width:40px;"></div>
+  </div>
+
+  <div class="camera-frame" id="cameraFrame">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="viewfinder" id="viewfinder"></div>
+    <div class="scan-line" id="scanLine"></div>
+    <div class="hint-pill">Align roll no., name &amp; department inside the frame</div>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="previewImg" class="preview" style="display:none;">
+    <div id="loadingOverlay" style="display:none; position:absolute; inset:0; background:rgba(13,11,22,0.75); align-items:center; justify-content:center; flex-direction:column; gap:10px; color:#fff;">
+      <div style="width:36px; height:36px; border:3px solid rgba(233,162,76,0.3); border-top-color:#E9A24C; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+      <div style="font-size:13px;">Reading the sheet…</div>
+    </div>
+  </div>
+
+  <div class="scan-controls" id="captureControls">
+    <button class="ghost-btn" onclick="window.location.href='{{ url_for('dashboard') }}'">Cancel</button>
+    <button class="shutter-btn" id="captureBtn" title="Capture"></button>
+    <button class="ghost-btn" id="retakeBtn" style="display:none;" onclick="retake()">Retake</button>
+  </div>
+
+  <!-- Review sheet: hidden until a capture comes back from OCR -->
+  <div class="review-sheet" id="reviewSheet" style="display:none;">
+    <div class="review-title">Confirm extracted details</div>
+    <span class="confidence-badge" id="confidenceBadge">Medium</span>
+
+    <div class="field">
+      <label for="rollInput">Roll number</label>
+      <input type="text" id="rollInput" placeholder="e.g. 23H51A66D9" style="font-family: var(--font-mono); text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label for="nameInput">Student name</label>
+      <input type="text" id="nameInput" placeholder="e.g. G. Sai Sahithi">
+    </div>
+    <div class="field">
+      <label for="deptInput">Department</label>
+      <input type="text" id="deptInput" placeholder="e.g. CSE-AIML">
+    </div>
+    <div class="field">
+      <label for="marksInput">Marks</label>
+      <input type="text" id="marksInput" placeholder="e.g. 47/50">
+    </div>
+
+    <button class="btn-primary" id="saveBtn" onclick="saveRecord()">Save to sheet</button>
+    <button class="ghost-btn" style="width:100%; margin-top:10px; color:var(--indigo-deep); background:transparent; border-color:var(--line);" onclick="retake()">Scan again instead</button>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const previewImg = document.getElementById('previewImg');
+const captureBtn = document.getElementById('captureBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const scanLine = document.getElementById('scanLine');
+const viewfinder = document.getElementById('viewfinder');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const reviewSheet = document.getElementById('reviewSheet');
+const captureControls = document.getElementById('captureControls');
+
+let stream = null;
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false
+    });
+    video.srcObject = stream;
+  } catch (err) {
+    document.querySelector('.hint-pill').textContent = 'Camera unavailable — check browser permissions';
+    console.error(err);
+  }
+}
+startCamera();
+
+captureBtn.addEventListener('click', async () => {
+  const w = video.videoWidth || 1280;
+  const h = video.videoHeight || 960;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+  previewImg.src = dataUrl;
+  video.style.display = 'none';
+  previewImg.style.display = 'block';
+  viewfinder.style.display = 'none';
+  scanLine.style.display = 'none';
+  captureControls.style.display = 'none';
+  loadingOverlay.style.display = 'flex';
+
+  if (stream) stream.getTracks().forEach(t => t.stop());
+
+  try {
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl })
+    });
+    const data = await res.json();
+    loadingOverlay.style.display = 'none';
+
+    if (data.error) {
+      alert(data.error);
+      retake();
+      return;
+    }
+
+    document.getElementById('rollInput').value = data.roll_number || '';
+    document.getElementById('nameInput').value = data.student_name || '';
+    document.getElementById('deptInput').value = data.department || '';
+    document.getElementById('marksInput').value = data.marks || '';
+
+    const badge = document.getElementById('confidenceBadge');
+    badge.textContent = data.confidence;
+    badge.className = 'confidence-badge ' + (
+      data.confidence.startsWith('High') ? 'high' :
+      data.confidence.startsWith('Medium') ? 'medium' : 'low'
+    );
+
+    reviewSheet.style.display = 'block';
+  } catch (err) {
+    loadingOverlay.style.display = 'none';
+    alert('Something went wrong reading the sheet. Please try again.');
+    retake();
+  }
+});
+
+function retake() {
+  reviewSheet.style.display = 'none';
+  previewImg.style.display = 'none';
+  video.style.display = 'block';
+  viewfinder.style.display = 'block';
+  scanLine.style.display = 'block';
+  captureControls.style.display = 'flex';
+  startCamera();
+}
+
+async function saveRecord() {
+  const payload = {
+    roll_number: document.getElementById('rollInput').value.trim(),
+    student_name: document.getElementById('nameInput').value.trim(),
+    department: document.getElementById('deptInput').value.trim(),
+    marks: document.getElementById('marksInput').value.trim(),
+    confidence: document.getElementById('confidenceBadge').textContent
+  };
+  if (!payload.roll_number) {
+    alert('Roll number is required before saving.');
+    return;
+  }
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.textContent = 'Saving…';
+  saveBtn.disabled = true;
+
+  const res = await fetch('/api/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.status === 'saved') {
+    window.location.href = '{{ url_for("my_sheets") }}';
+  } else {
+    alert(data.error || 'Could not save the record.');
+    saveBtn.textContent = 'Save to sheet';
+    saveBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

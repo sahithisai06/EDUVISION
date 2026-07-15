@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduVision — Sign in</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-wrap ledger-bg">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="glyph">EV</div>
+      <div class="name">EduVision</div>
+      <div class="sub">OCR-based exam sheet reader<br>for faculty &amp; departments</div>
+    </div>
+
+    {% if error %}
+      <div class="login-error">{{ error }}</div>
+    {% endif %}
+
+    <form id="signinForm" method="POST" action="{{ url_for('login') }}">
+      <div class="field">
+        <label for="email">Gmail address</label>
+        <input type="email" id="email" name="email" placeholder="you@gmail.com" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn-primary">Sign in</button>
+    </form>
+
+    <div class="divider">or</div>
+    <button type="button" class="btn-google" onclick="alert('Google OAuth would be wired up here once a Google Cloud Client ID is added — see README.')">
+      Continue with Google
+    </button>
+
+    <div class="toggle-row">
+      New faculty account? <button type="button" onclick="showSignup()">Create one</button>
+    </div>
+
+    <div class="demo-hint">demo login → faculty@cmrcet.ac.in / eduvision123</div>
+  </div>
+</div>
+
+<div id="signupOverlay" style="display:none; position:fixed; inset:0; background:rgba(36,28,63,0.55); align-items:center; justify-content:center; padding:24px;">
+  <div class="login-card" style="max-width:380px;">
+    <div class="login-logo">
+      <div class="glyph">EV</div>
+      <div class="name">Create account</div>
+      <div class="sub">Set up faculty access to EduVision</div>
+    </div>
+    <form method="POST" action="{{ url_for('signup') }}">
+      <div class="field">
+        <label for="s_name">Full name</label>
+        <input type="text" id="s_name" name="name" placeholder="e.g. B. Suresh Ram" required>
+      </div>
+      <div class="field">
+        <label for="s_email">Gmail address</label>
+        <input type="email" id="s_email" name="email" placeholder="you@gmail.com" required>
+      </div>
+      <div class="field">
+        <label for="s_password">Password</label>
+        <input type="password" id="s_password" name="password" placeholder="Choose a password" required>
+      </div>
+      <button type="submit" class="btn-primary">Create account &amp; sign in</button>
+    </form>
+    <div class="toggle-row">
+      Already have an account? <button type="button" onclick="hideSignup()">Back to sign in</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showSignup(){ document.getElementById('signupOverlay').style.display='flex'; }
+function hideSignup(){ document.getElementById('signupOverlay').style.display='none'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduVision — Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell ledger-bg">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">Edu<span>Vision</span></div>
+    </div>
+    <a href="{{ url_for('account') }}" class="icon-btn" title="Account">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+    </a>
+  </div>
+
+  <div class="hello">
+    <div class="greet">Welcome, {{ user_name }}</div>
+    <div class="date">Ready to digitize today's answer sheets</div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-chip">
+      <div class="num">{{ total }}</div>
+      <div class="label">Total scanned</div>
+    </div>
+    <div class="stat-chip">
+      <div class="num">{{ today }}</div>
+      <div class="label">Scanned today</div>
+    </div>
+  </div>
+
+  <div class="tile-grid">
+    <a href="{{ url_for('scan') }}" class="tile scan">
+      <div class="tile-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="tile-label">Scan Page</div>
+      <div class="tile-sub">Capture a sheet and extract marks instantly</div>
+    </a>
+
+    <a href="{{ url_for('my_sheets') }}" class="tile sheets">
+      <div class="tile-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      </div>
+      <div class="tile-label">My Sheets</div>
+      <div class="tile-sub">History of every roll number recorded</div>
+    </a>
+
+    <a href="{{ url_for('download_excel') }}" class="tile reports">
+      <div class="tile-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      </div>
+      <div class="tile-label">Export Excel</div>
+      <div class="tile-sub">Download the master marks workbook</div>
+    </a>
+
+    <a href="{{ url_for('account') }}" class="tile account">
+      <div class="tile-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      </div>
+      <div class="tile-label">Account</div>
+      <div class="tile-sub">Profile, sign-out and app info</div>
+    </a>
+  </div>
+
+  <nav class="bottom-nav">
+    <a class="active" href="{{ url_for('dashboard') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('scan') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M4 8V6a2 2 0 0 1 2-2h2M20 8V6a2 2 0 0 0-2-2h-2"/></svg>
+      Scan
+    </a>
+    <a href="{{ url_for('my_sheets') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/></svg>
+      Sheets
+    </a>
+    <a href="{{ url_for('account') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/></svg>
+      Account
+    </a>
+  </nav>
+</div>
+</body>
+</html>

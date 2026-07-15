@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduVision — My Sheets</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell ledger-bg">
+
+  <div class="topbar">
+    <div class="brand">
+      <a href="{{ url_for('dashboard') }}" style="color:var(--indigo-deep); display:flex; align-items:center; gap:6px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <div class="mark" style="font-size:18px;">My Sheets</div>
+    </div>
+    <a href="{{ url_for('scan') }}" class="icon-btn" title="Scan a new sheet">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    </a>
+  </div>
+
+  <form class="search-bar" method="GET" action="{{ url_for('my_sheets') }}">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by roll number or name">
+    <button type="submit">Search</button>
+  </form>
+
+  <button class="download-fab" onclick="window.location.href='{{ url_for('download_excel') }}'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+    Download full Excel workbook
+  </button>
+
+  {% if records %}
+  <div class="record-list">
+    {% for r in records %}
+    <div class="record-card">
+      <div class="record-roll">{{ r['roll_number'] }}</div>
+      <div class="record-body">
+        <div class="record-name">{{ r['student_name'] or 'Name not captured' }}</div>
+        <div class="record-meta">{{ r['department'] or '—' }} · {{ r['created_at'] }}</div>
+      </div>
+      <div class="record-marks">{{ r['marks'] or '—' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="glyph">🗂️</div>
+    <div><strong>No sheets scanned yet</strong></div>
+    <div style="font-size:12.5px; margin-top:4px;">Scan an answer sheet and it will show up here, organized by roll number.</div>
+  </div>
+  {% endif %}
+
+  <nav class="bottom-nav">
+    <a href="{{ url_for('dashboard') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </a>
+    <a href="{{ url_for('scan') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M4 8V6a2 2 0 0 1 2-2h2M20 8V6a2 2 0 0 0-2-2h-2"/></svg>
+      Scan
+    </a>
+    <a class="active" href="{{ url_for('my_sheets') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/></svg>
+      Sheets
+    </a>
+    <a href="{{ url_for('account') }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/></svg>
+      Account
+    </a>
+  </nav>
+</div>
+</body>
+</html>
