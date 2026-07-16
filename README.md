@@ -103,3 +103,7 @@ have:
 
 Not mandatory, but worth it only if you actually use them on a project —
 adding a keyword with nothing behind it tends to fall apart in interviews.
+
+$env:GOOGLE_CLIENT_ID="paste-client-id-here"
+$env:GOOGLE_CLIENT_SECRET="paste-client-secret-here"
+python app.py
