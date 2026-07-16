@@ -21,9 +21,17 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
+from authlib.integrations.flask_client import OAuth
 from PIL import Image
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\gsail\Downloads\tesseract-ocr-w64-setup-5.5.0.20241111.exe"
+
+# On Windows, Tesseract isn't on PATH by default — point pytesseract at the
+# installed binary. Mac/Linux normally don't need this if installed via
+# brew/apt, since it lands on PATH automatically.
+_WINDOWS_TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+if os.name == "nt" and os.path.exists(_WINDOWS_TESSERACT_PATH):
+    pytesseract.pytesseract.tesseract_cmd = _WINDOWS_TESSERACT_PATH
+
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -36,6 +44,20 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("EDUVISION_SECRET", "dev-secret-change-me")
+# ---------------------------------------------------------------------------
+# Google Sign-In (OAuth 2.0) — credentials come from Google Cloud Console.
+# Set these as environment variables; never hard-code them in this file.
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+# See README.md "Setting up Google Sign-In" for the full walkthrough.
+# ---------------------------------------------------------------------------
+oauth = OAuth(app)
+google = oauth.register(
+    name="google",
+    client_id=os.environ.get("GOOGLE_CLIENT_ID"),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
 
 
 def get_db():
