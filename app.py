@@ -223,7 +223,47 @@ def signup():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+@app.route("/auth/google")
+def auth_google():
+    if not os.environ.get("GOOGLE_CLIENT_ID"):
+        return render_template(
+            "login.html",
+            error="Google Sign-In isn't configured yet — set GOOGLE_CLIENT_ID and "
+                  "GOOGLE_CLIENT_SECRET (see README.md)."
+        )
+    redirect_uri = url_for("auth_google_callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
 
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get("userinfo")
+        if not user_info:
+            user_info = google.parse_id_token(token, nonce=None)
+    except Exception as e:
+        return render_template("login.html", error=f"Google sign-in failed: {e}")
+
+    email = user_info.get("email", "").strip().lower()
+    name = user_info.get("name") or email.split("@")[0].title()
+
+    if not email:
+        return render_template("login.html", error="Could not read your Google account email.")
+
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not user:
+        conn.execute(
+            "INSERT INTO users (email, password_hash, name, created_at) VALUES (?, ?, ?, ?)",
+            (email, generate_password_hash(os.urandom(16).hex()), name, datetime.now().isoformat())
+        )
+        conn.commit()
+    conn.close()
+
+    session["user_email"] = email
+    session["user_name"] = name
+    return redirect(url_for("dashboard"))
 
 @app.route("/dashboard")
 @login_required
